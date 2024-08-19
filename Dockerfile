@@ -1,5 +1,5 @@
 # Usar una imagen base de OpenJDK 17
-FROM openjdk:17-jdk-slim AS builder
+FROM openjdk:17-jdk AS builder
 
 # Crear un directorio de trabajo en el contenedor
 WORKDIR /app
@@ -13,7 +13,7 @@ RUN ./mvnw dependency:go-offline -B
 RUN ./mvnw package -DskipTests
 
 # Usar una imagen base de OpenJDK 17 más ligera para ejecutar la aplicación
-FROM openjdk:17-jre-slim
+FROM openjdk:17-jre
 
 # Crear un directorio de trabajo en el contenedor
 WORKDIR /app
