@@ -1,14 +1,13 @@
-# Usa la imagen base de OpenJDK 17
-FROM openjdk:17-jdk-alpine
+FROM openjdk:17-jdk-slim AS build
 
-# Configura el directorio de trabajo
-WORKDIR /app
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN ./mvnw dependency:resolve
 
-# Copia el archivo JAR generado al contenedor
-COPY target/jacs-crud.jar /app/jacs-crud.jar
+COPY src src
+RUN ./mvnw package
 
-
-EXPOSE 8080
-
-# Comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app/jacs-crud.jar"]
+FROM openjdk:17-jdk-slim
+WORKDIR /demo
+COPY --from=build target/*.jar jacs-crud.jar
+ENTRYPOINT ["java", "-jar", "jacs-crud.jar"]
