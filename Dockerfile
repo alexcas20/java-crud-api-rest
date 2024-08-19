@@ -1,28 +1,29 @@
 # Usar una imagen base de OpenJDK 17
-FROM openjdk:17-jdk AS builder
+FROM openjdk:17-jdk AS build
 
 # Crear un directorio de trabajo en el contenedor
+COPY . /app
 WORKDIR /app
 
-# Copiar el archivo pom.xml y el directorio src
-COPY pom.xml ./
-COPY src ./src
 
 # Descargar las dependencias y construir el archivo JAR
-RUN ./mvnw dependency:go-offline -B
+RUN chmod +x mvnw
 RUN ./mvnw package -DskipTests
+RUN mv -f target/*.jar appp.jar
 
 # Usar una imagen base de OpenJDK 17 más ligera para ejecutar la aplicación
 FROM openjdk:17-jre
 
-# Crear un directorio de trabajo en el contenedor
-WORKDIR /app
+# Exponer el puerto en el que la aplicación Spring Boot se ejecutará
+ARG PORT
+ENV PORT=${PORT}
 
 # Copiar el archivo JAR del contenedor de construcción al contenedor final
-COPY --from=builder /app/target/*.jar /app/app.jar
+COPY --from=build /app/app.jar .
 
-# Exponer el puerto en el que la aplicación Spring Boot se ejecutará
-EXPOSE 8080
+RUN useradd runtime
+USER runtime
+
 
 # Establecer el comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=${PORT}}", "-jar" , "app.jar"]
