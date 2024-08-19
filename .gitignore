@@ -34,5 +34,5 @@ build/
 
 .env
 postgres/
-src/main/resources/application.properties
+
 

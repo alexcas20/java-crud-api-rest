@@ -1,13 +1,20 @@
-FROM openjdk:17-jdk-slim AS build
+FROM eclipse-temurin:17-jdk as build
 
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
-RUN ./mvnw dependency:resolve
+COPY . /app
+WORKDIR /app
 
-COPY src src
-RUN ./mvnw package
+RUN chmod +x mvnw
+RUN ./mvnw package -DskipTests
+RUN mv -f target/*.jar app.jar
 
-FROM openjdk:17-jdk-slim
-WORKDIR /demo
-COPY --from=build target/*.jar jacs-crud.jar
-ENTRYPOINT ["java", "-jar", "jacs-crud.jar"]
+FROM eclipse-temurin:17-jre
+
+ARG PORT
+ENV PORT=${PORT}
+
+COPY --from=build /app/app.jar .
+
+RUN useradd runtime
+USER runtime
+
+ENTRYPOINT [ "java", "-Dserver.port=${PORT}", "-jar", "app.jar" ]
